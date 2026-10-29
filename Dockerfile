@@ -14,6 +14,7 @@ ENV HOST=0.0.0.0
 ENV DATABASE_PATH=/data/embeds.db
 COPY --from=build /app/build ./build
 COPY --from=build /app/package.json ./package.json
+COPY scripts/serve.mjs ./scripts/serve.mjs
 RUN mkdir -p /data
 EXPOSE 3000
-CMD ["node", "build/index.js"]
+CMD ["node", "scripts/serve.mjs"]
