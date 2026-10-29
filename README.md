@@ -1,54 +1,62 @@
-# sv
+# Lag embeds
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+En journalist beskriver en embed i chatten. Modellen svarer med et selvstendig HTML-dokument, forhåndsvisningen oppdateres, og en publisert embed kan limes inn i en artikkel uten å lese cookies, endre siden rundt seg eller sende leseren videre.
 
-## Creating a project
+## Kom i gang
 
-If you're seeing this, you've probably already done this step. Congrats!
+Krav: Docker, eller Node 22+ og pnpm.
 
-```sh
-# create a new project
-npx sv create my-app
+```bash
+cp .env.example .env
+# fyll inn LLM_API_KEY
+docker compose up --build
 ```
 
-To recreate this project with the same configuration:
+Appen lytter på http://localhost:3000. SQLite-filen ligger i Docker-volumet `embed-data`.
 
-```sh
-# recreate this project
-pnpm dlx sv@1.1.1 create --template minimal --types ts --add prettier eslint vitest="usages:unit" tailwindcss="plugins:none" sveltekit-adapter="adapter:node" --install pnpm lag-embeds
+Uten Docker:
+
+```bash
+cp .env.example .env
+pnpm install
+pnpm dev
 ```
 
-## Adding features
+Da lagres databasen i `data/embeds.db`.
 
-Add features to your project with `sv add`:
+## Miljøvariabler
 
-```sh
-npx sv add
+| Variabel        | Betydning                                                                        |
+| --------------- | -------------------------------------------------------------------------------- |
+| `LLM_PROVIDER`  | `openai` (standard) eller `anthropic`                                            |
+| `LLM_API_KEY`   | Nøkkelen. Uten nøkkel kan du åpne appen, men chatten svarer med en tydelig feil. |
+| `LLM_MODEL`     | Valgfri modell-id. Tomt felt bruker `gpt-4.1-mini` eller `claude-haiku-4-5`.     |
+| `LLM_BASE_URL`  | Valgfri OpenAI-kompatibel base-URL, uten avsluttende skråstrek.                  |
+| `DATABASE_PATH` | SQLite-fil. Compose setter `/data/embeds.db`.                                    |
+
+## Bruk
+
+Skriv inn et navn. Det lagres i en cookie og er ikke innlogging. Embedene knyttes til navnet i denne nettleseren.
+
+Chatten ligger i midten, «Mine embeds» til venstre og forhåndsvisning til høyre. På smal skjerm bytter du mellom Mine, Chat og Visning. Forhåndsvisningen har Desktop og Mobil (375 px).
+
+Når embeden er publisert, kopierer du kodesnutten eller åpner testartikkelen på `/artikkel/[id]`.
+
+## Sikkerhet for publiserte embeds
+
+Leseren får embeden i en iframe med `sandbox="allow-scripts"`. `allow-same-origin` og `allow-top-navigation` er ikke satt, så dokumentet har opaque origin og kan ikke lese sidens cookies eller navigere vinduet. `/view/[id]` sender i tillegg en streng CSP: ingen nettverkskall, ingen skjema, ingen nøstede rammer. Høyden kommer fra `postMessage`, og foreldresiden godtar bare meldinger fra iframens `contentWindow` med origin `"null"` og riktig embed-id.
+
+Utkast kan forhåndsvises av eieren. Testartikkelen viser bare publiserte embeds.
+
+## Tester
+
+```bash
+pnpm test
+pnpm check
 ```
 
-For example, to add Tailwind CSS:
+Testene dekker eierskap i databasen, uthenting av HTML fra modellsvaret, CSP-injeksjon og validering av høyde-meldinger.
 
-```sh
-npx sv add tailwindcss
-```
+## Utvikling
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
+Kjerneflyten er chat, lagring, forhåndsvisning og publisering. Manuell HTML-redigering og vedlegg er bevisst utelatt.
