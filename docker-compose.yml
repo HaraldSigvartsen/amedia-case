@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      DATABASE_PATH: /data/embeds.db
+      PORT: 3000
+      HOST: 0.0.0.0
+    volumes:
+      - embed-data:/data
+
+volumes:
+  embed-data:
