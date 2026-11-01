@@ -1,6 +1,6 @@
 const DEFAULT_MODELS = {
 	openai: 'gpt-4.1-mini',
-	anthropic: 'claude-haiku-4-5'
+	anthropic: 'claude-sonnet-5'
 } as const;
 
 export function providerModel(provider: 'openai' | 'anthropic', configured: string): string {

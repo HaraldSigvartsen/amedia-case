@@ -4,7 +4,7 @@ SvelteKit 3 og Tailwind v4 kom fra `sv create` i oktober 2026. Adapter og kompil
 
 SQLite går via `node:sqlite` (`DatabaseSync`). Oppgaven tillot `better-sqlite3` eller filer. Innebygd SQLite slipper native bygg i Docker og holder avhengighetslisten tom utover rammeverket. Filen ligger i `./data` lokalt og i et Compose-volum i containeren.
 
-LLM-et velges med `LLM_PROVIDER` og én nøkkel. OpenAI bruker chat completions, Anthropic bruker Messages, begge med SSE. Tom nøkkel stopper ikke appen. Tidligere HTML sendes én gang i systemprompten. Samtalehistorikken sendes som kommentarer, maks 20 meldinger, så ikke hele HTML-en gjentas i hvert tur. Svaret må være et komplett dokument. Klienten oppdaterer forhåndsvisningen først når `</html>` er på plass.
+Eksempelfilen setter Anthropic og `claude-sonnet-5`, så sensor bare limer inn nøkkelen. OpenAI kan fortsatt velges med `LLM_PROVIDER`. OpenAI bruker chat completions, Anthropic bruker Messages, begge med SSE. Tom nøkkel stopper ikke appen. Tidligere HTML sendes én gang i systemprompten. Samtalehistorikken sendes som kommentarer, maks 20 meldinger, så ikke hele HTML-en gjentas i hvert tur. Svaret må være et komplett dokument. Klienten oppdaterer forhåndsvisningen først når `</html>` er på plass.
 
 Brukeren er et navn i en httpOnly-cookie. Det er bevisst ikke innlogging. Alle spørringer filtrerer på eier, og upubliserte embeds returneres ikke til andre. Adapter-node antar https når ingen protokoll-header er satt. Da blir innloggingsskjemaet avvist som cross-site, og kodesnutten får feil origin. Docker-prosessen setter derfor `x-forwarded-proto: http` før rammeverket leser forespørselen.
 

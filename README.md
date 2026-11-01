@@ -8,9 +8,11 @@ Krav: Docker, eller Node 22+ og pnpm.
 
 ```bash
 cp .env.example .env
-# fyll inn LLM_API_KEY
+# lim inn nøkkelen du fikk i LLM_API_KEY
 docker compose up --build
 ```
+
+`.env.example` setter allerede Anthropic og `claude-sonnet-5`. Du trenger ikke velge modell.
 
 Appen lytter på http://localhost:3000. SQLite-filen ligger i Docker-volumet `embed-data`.
 
@@ -28,9 +30,9 @@ Da lagres databasen i `data/embeds.db`.
 
 | Variabel        | Betydning                                                                        |
 | --------------- | -------------------------------------------------------------------------------- |
-| `LLM_PROVIDER`  | `openai` (standard) eller `anthropic`                                            |
-| `LLM_API_KEY`   | Nøkkelen. Uten nøkkel kan du åpne appen, men chatten svarer med en tydelig feil. |
-| `LLM_MODEL`     | Valgfri modell-id. Tomt felt bruker `gpt-4.1-mini` eller `claude-haiku-4-5`.     |
+| `LLM_PROVIDER`  | `anthropic` i eksempelfilen. `openai` virker også.                              |
+| `LLM_API_KEY`   | Nøkkelen du fikk. Uten nøkkel kan du åpne appen, men chatten svarer med en feil. |
+| `LLM_MODEL`     | `claude-sonnet-5` i eksempelfilen. Tomt felt bruker den for Anthropic.           |
 | `LLM_BASE_URL`  | Valgfri OpenAI-kompatibel base-URL, uten avsluttende skråstrek.                  |
 | `DATABASE_PATH` | SQLite-fil. Compose setter `/data/embeds.db`.                                    |
 
@@ -59,4 +61,4 @@ Testene dekker eierskap i databasen, uthenting av HTML fra modellsvaret, CSP-inj
 
 ## Utvikling
 
-Kjerneflyten er chat, lagring, forhåndsvisning og publisering. Manuell HTML-redigering og vedlegg er bevisst utelatt.
+Kjerneflyten er chat, lagring, forhåndsvisning og publisering. Chatten tar imot bilde, tekstfil og tale. Manuell HTML-redigering er utelatt.

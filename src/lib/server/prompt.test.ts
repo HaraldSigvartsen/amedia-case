@@ -4,7 +4,7 @@ import { anthropicMisroute, providerModel, systemPrompt } from '#lib/server/prom
 describe('providerModel', () => {
 	it('uses the provider default when the model is empty', () => {
 		expect(providerModel('openai', '  ')).toBe('gpt-4.1-mini');
-		expect(providerModel('anthropic', '')).toBe('claude-haiku-4-5');
+		expect(providerModel('anthropic', '')).toBe('claude-sonnet-5');
 	});
 
 	it('keeps a configured model id', () => {
