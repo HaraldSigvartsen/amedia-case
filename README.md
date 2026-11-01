@@ -33,7 +33,6 @@ Da lagres databasen i `data/embeds.db`.
 | `LLM_PROVIDER`  | `anthropic` i eksempelfilen. `openai` virker også.                              |
 | `LLM_API_KEY`   | Nøkkelen du fikk. Uten nøkkel kan du åpne appen, men chatten svarer med en feil. |
 | `LLM_MODEL`     | `claude-sonnet-5` i eksempelfilen. Tomt felt bruker den for Anthropic.           |
-| `LLM_BASE_URL`  | Valgfri OpenAI-kompatibel base-URL, uten avsluttende skråstrek.                  |
 | `DATABASE_PATH` | SQLite-fil. Compose setter `/data/embeds.db`.                                    |
 
 ## Bruk

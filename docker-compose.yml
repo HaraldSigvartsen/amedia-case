@@ -7,7 +7,6 @@ services:
       LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_MODEL: ${LLM_MODEL:-claude-sonnet-5}
-      LLM_BASE_URL: ${LLM_BASE_URL:-}
       DATABASE_PATH: /data/embeds.db
       PORT: 3000
       HOST: 0.0.0.0
