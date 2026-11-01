@@ -10,4 +10,4 @@ Brukeren er et navn i en httpOnly-cookie. Det er bevisst ikke innlogging. Alle s
 
 Publisert HTML kjøres bare i `sandbox="allow-scripts"`. CSP blokkerer nettverk, skjema og nøstede rammer. Høyde-scriptet injiseres av serveren, ikke av modellen. Det måler innholdets boks, ikke `scrollHeight`: i en iframe er `scrollHeight` minst like høy som vinduet, så en kort embed som lastes inn i en 240 px høy ramme ellers blir stående på 240. Forelderen sjekker `event.source`, origin `"null"` og embed-id. Testartikkelen embedder `/view/[id]`, mens editoren bruker `srcdoc` av det samme klargjorte dokumentet.
 
-Streaming er med. Manuell HTML-redigering, vedlegg og egen kvalitetssjekk er utelatt for å holde kjernen ferdig.
+Streaming er med og delvis gjennomført, mest ideelt ville vært å ha bygget en html fil journalistene selv kunne redigere selv og kunne tweake på av HTML og slikt. Fikk også startet smått på vedlegg og opptakk slik at journalistene ikke trengte å skrive alt, til tider så kan det være nyttig å heller kunne snakke muntlig og få det transkribert automatisk. Transkriberingen er ikke testet og ikke verifisert at den funker. 

@@ -1,6 +1,7 @@
 import { LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_PROVIDER } from '$app/env/private';
+import { anthropicUserContent, openaiUserContent, type ChatAttachment } from '#lib/attachments.ts';
 import { visibleAssistantText } from '#lib/html.ts';
-import { providerModel, systemPrompt } from '#lib/server/prompt.ts';
+import { anthropicMisroute, providerModel, systemPrompt } from '#lib/server/prompt.ts';
 import type { Role } from '#lib/types.ts';
 
 const MISSING_KEY = 'Mangler LLM_API_KEY. Legg nøkkelen i .env og start på nytt.';
@@ -15,9 +16,30 @@ type StreamEmbedOptions = {
 	history: ChatTurn[];
 	currentHtml: string;
 	userMessage: string;
+	attachments?: ChatAttachment[];
 	signal?: AbortSignal;
 	onDelta: (chunk: string) => void;
 };
+
+type ModelContent = string | Array<{ type: string; text?: string }>;
+
+function combineContent(left: ModelContent, right: ModelContent): ModelContent {
+	if (typeof left === 'string' && typeof right === 'string') return `${left}\n\n${right}`;
+	const blocks = [
+		...(typeof left === 'string' ? [{ type: 'text', text: left }] : left),
+		...(typeof right === 'string' ? [{ type: 'text', text: right }] : right)
+	];
+	const merged: Array<{ type: string; text?: string }> = [];
+	for (const block of blocks) {
+		const previous = merged.at(-1);
+		if (block.type === 'text' && previous?.type === 'text') {
+			previous.text = `${previous.text}\n\n${block.text}`;
+			continue;
+		}
+		merged.push({ ...block });
+	}
+	return merged;
+}
 
 function modelHistory(history: ChatTurn[]): ChatTurn[] {
 	return history.slice(-20).map((message) => {
@@ -27,12 +49,12 @@ function modelHistory(history: ChatTurn[]): ChatTurn[] {
 	});
 }
 
-function anthropicMessages(history: ChatTurn[], userMessage: string): ChatTurn[] {
-	const merged: ChatTurn[] = [];
-	for (const message of [...history, { role: 'user' as const, content: userMessage }]) {
+function anthropicMessages(history: ChatTurn[], userContent: ModelContent) {
+	const merged: Array<{ role: Role; content: ModelContent }> = [];
+	for (const message of [...history, { role: 'user' as const, content: userContent }]) {
 		const previous = merged.at(-1);
 		if (previous && previous.role === message.role) {
-			previous.content = `${previous.content}\n\n${message.content}`;
+			previous.content = combineContent(previous.content, message.content);
 			continue;
 		}
 		merged.push({ role: message.role, content: message.content });
@@ -160,7 +182,7 @@ async function streamOpenAI(
 			messages: [
 				{ role: 'system', content: systemPrompt(options.currentHtml) },
 				...history,
-				{ role: 'user', content: options.userMessage }
+				{ role: 'user', content: openaiUserContent(options.userMessage, options.attachments ?? []) }
 			]
 		},
 		options.signal
@@ -194,7 +216,10 @@ async function streamAnthropic(
 			temperature: 0.4,
 			stream: true,
 			system: systemPrompt(options.currentHtml),
-			messages: anthropicMessages(history, options.userMessage)
+			messages: anthropicMessages(
+				history,
+				anthropicUserContent(options.userMessage, options.attachments ?? [])
+			)
 		},
 		options.signal
 	);
@@ -211,6 +236,8 @@ async function streamAnthropic(
 
 export async function streamEmbedReply(options: StreamEmbedOptions): Promise<string> {
 	if (!LLM_API_KEY.trim()) throw new Error(MISSING_KEY);
+	const misroute = anthropicMisroute(LLM_PROVIDER, LLM_API_KEY, LLM_BASE_URL);
+	if (misroute) throw new Error(misroute);
 	const history = modelHistory(options.history);
 	const model = providerModel(LLM_PROVIDER, LLM_MODEL);
 	if (LLM_PROVIDER === 'anthropic') return streamAnthropic(history, options, model);

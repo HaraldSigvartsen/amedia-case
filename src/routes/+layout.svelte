@@ -7,7 +7,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>Lag embeds</title>
+	<title>Amedias lille hjelper</title>
 </svelte:head>
 
 {@render children()}

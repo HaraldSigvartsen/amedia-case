@@ -1,5 +1,19 @@
 # Arbeidslogg
 
+Jeg startet med dette prosjektet med å lese gjennom casen deretter forstå hva jeg skulle gjøre og kartlegge funksjonalitet. Så åpnet jeg en sterk modell med Thinking mode. Jeg har alltid en liten fremgangsmåte jeg liker å gjøre før jeg starter på ett nytt prosjekt eller noe ny funksjonalitet og det er denne prompten:
+
+
+I want a deeper version of this task, not a bigger one. Before rewriting it: (1) say what a top professional in this field would do here that I'm not asking for; (2) name the rawest material they would start from instead of what has already been digested for me; (3) name the specific methods and tools they would use; (4) say what, other than you or me, would show the result is right. Then rewrite my prompt to ask for exactly that.
+
+Så det jeg gjorde var å legge til casen ved starten av prompten for å gi modellen full kontekst før den begynte å generere løsningen også skrev jeg min egen prompt med de funksjonalitetene jeg tenkte og hva vi skulle fokusere på først i løsningen.  Så fikk jeg en fordypet prompt jeg kunne sende til en modell i terminalen for å starte opp prosjektet. Mens den jobbet med å generere løsningen så følgte jeg med lokalt og så på utviklingen og kunne komme med tilbakemeldinger underveis som havnet i kø. Dette var ekstra funksjonalitet og små tweaks som at mobil/desktop visningen ikke var optimalisert. 
+
+![Cli-screenshot.png](./src/lib/assets/cli-screenshot.png)
+
+Jeg fikk kun jobbet 2 timer med dette, så det er mye som jeg kunne gjort annerledes og fikset på, blant annet at jeg ikke fikk skrevet evals tester for å sjekke om alle funksjonalitetene fungerte som forventet. Jeg fikk ikke testet løsningen grundig selv, men fikk laget et lite halloween spill som fungerte lokalt. 
+
+Jeg valgte å legge til streaming av hva agenten gjorde, støtte for vedlegg og opptakk av lyd for transkribering. For å være ærlig så fikk jeg ikke testet dette nøye og er usikker på kvaliteten for dette. Hadde jeg hatt mer tid ville jeg testet manuelt selv og satt opp en god del mer kode-tester(evals) og hatt agenter uten context som testet løsningen og kom med feedback på selve løsningen og ikke koden. Her kan man bruke f.eks Codex via nettleser for å teste localhost:3000 og ikke la agenten se i koden.
+
+
 ## Oppsett
 
 Prosjektet ligger i `Documents/Amedia/lag-embeds`.

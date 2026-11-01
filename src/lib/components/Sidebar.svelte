@@ -41,13 +41,15 @@
 	}
 </script>
 
-<aside class="flex h-full min-h-0 w-full flex-col bg-paper">
+<aside class="flex h-full min-h-0 w-full flex-col border-line bg-panel lg:border-r">
 	<div class="px-5 pt-6 pb-4">
-		<p class="font-serif text-2xl leading-none">Amedia</p>
-		<p class="mt-2 text-xs tracking-[0.16em] text-[#5c574f] uppercase">Embed-desk</p>
+		<p class="text-2xl leading-none">Amedias</p>
+		<p class="mt-1 text-2xl leading-none">lille hjelper</p>
 		<button
 			type="button"
-			class="mt-5 w-full rounded-xl bg-accent px-3 py-2.5 text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+			class="mt-5 w-full rounded-lg bg-accent px-3 py-2.5 text-sm text-white hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60 {creating
+				? 'agent-busy'
+				: ''}"
 			disabled={creating}
 			onclick={onCreate}
 		>
@@ -57,11 +59,15 @@
 
 	<nav class="min-h-0 flex-1 overflow-y-auto px-3 pb-4" aria-label="Mine embeds">
 		{#if embeds.length === 0}
-			<p class="px-2 text-sm leading-6 text-[#5c574f]">Ingen embeds ennå.</p>
+			<p class="px-2 text-sm leading-6 text-muted">Ingen embeds ennå.</p>
 		{:else}
 			<ul class="flex flex-col gap-1">
 				{#each embeds as embed (embed.id)}
-					<li class="rounded-xl {embed.id === activeId ? 'border-l-2 border-accent bg-white' : ''}">
+					<li
+						class="rounded-lg {embed.id === activeId
+							? 'border-l-2 border-accent bg-accent-soft'
+							: ''}"
+					>
 						{#if embed.id === activeId}
 							<div class="px-3 py-3">
 								<label class="sr-only" for="title-{embed.id}">Tittel</label>
@@ -75,10 +81,10 @@
 										if (event.key === 'Enter') event.currentTarget.blur();
 									}}
 								/>
-								<p class="mt-1 text-xs text-[#5c574f]">
+								<p class="mt-1 text-xs text-muted">
 									{relativeTime(embed.updatedAt)}
 									{#if embed.published}
-										· Publisert
+										· <span class="text-ok">Publisert</span>
 									{/if}
 								</p>
 								<button
@@ -93,14 +99,14 @@
 							</div>
 						{:else}
 							<a
-								class="block rounded-xl px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+								class="block rounded-lg px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 								href={resolve(`/?id=${embed.id}`)}
 							>
 								<span class="block truncate text-sm">{embed.title}</span>
-								<span class="mt-1 block text-xs text-[#5c574f]">
+								<span class="mt-1 block text-xs text-muted">
 									{relativeTime(embed.updatedAt)}
 									{#if embed.published}
-										· Publisert
+										· <span class="text-ok">Publisert</span>
 									{/if}
 								</span>
 							</a>
@@ -115,7 +121,7 @@
 		<p class="truncate text-sm">{journalist}</p>
 		<button
 			type="submit"
-			class="mt-2 text-sm text-[#5c574f] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+			class="mt-2 text-sm text-muted underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 		>
 			Logg ut
 		</button>

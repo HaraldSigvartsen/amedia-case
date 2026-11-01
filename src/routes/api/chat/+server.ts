@@ -1,5 +1,6 @@
+import { readAttachments, storedUserText } from '#lib/attachments.ts';
 import { addMessage, getEmbedForOwner, updateEmbed } from '#lib/server/embeds.ts';
-import { extractHtml, visibleAssistantText } from '#lib/html.ts';
+import { extractHtml, groundedAssistantNote, visibleAssistantText } from '#lib/html.ts';
 import { streamEmbedReply } from '#lib/server/llm.ts';
 import { DEFAULT_EMBED_TITLE, type ChatDonePayload } from '#lib/types.ts';
 import type { RequestHandler } from '@sveltejs/kit';
@@ -34,11 +35,18 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	const record =
 		payload && typeof payload === 'object'
-			? (payload as { embedId?: unknown; message?: unknown })
+			? (payload as { embedId?: unknown; message?: unknown; attachments?: unknown })
 			: {};
 	const message = typeof record.message === 'string' ? record.message.trim() : '';
-	if (message.length < 1 || message.length > 4000) {
+	const attachments = readAttachments(record.attachments);
+	if (!attachments.ok) {
+		return Response.json({ message: attachments.message }, { status: 400 });
+	}
+	if (message.length > 4000) {
 		return Response.json({ message: 'Skriv en melding på maks 4000 tegn.' }, { status: 400 });
+	}
+	if (message.length < 1 && attachments.attachments.length < 1) {
+		return Response.json({ message: 'Skriv en melding eller legg ved en fil.' }, { status: 400 });
 	}
 	if (typeof record.embedId !== 'string' || !record.embedId) {
 		return Response.json({ message: 'Fant ikke embeden.' }, { status: 404 });
@@ -51,7 +59,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 
 	const firstUserMessage = !embed.messages.some((item) => item.role === 'user');
-	addMessage(embed.id, 'user', message);
+	const storedMessage = storedUserText(message, attachments.attachments);
+	addMessage(embed.id, 'user', storedMessage);
 	let title = embed.title;
 	if (embed.title === DEFAULT_EMBED_TITLE && firstUserMessage) {
 		const nextTitle = titleFromMessage(message);
@@ -83,6 +92,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 					history,
 					currentHtml: previousHtml,
 					userMessage: message,
+					attachments: attachments.attachments,
 					signal: request.signal,
 					onDelta(chunk) {
 						streamed += chunk;
@@ -98,8 +108,14 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				const extracted = extractHtml(assistantText);
 				if (extracted && extracted !== emittedHtml) send('html', { html: extracted });
 
-				const commentary = visibleAssistantText(assistantText);
-				addMessage(embed.id, 'assistant', assistantText);
+				const commentary = groundedAssistantNote(
+					visibleAssistantText(assistantText),
+					previousHtml,
+					extracted
+				);
+				const storedText =
+					commentary === visibleAssistantText(assistantText) ? assistantText : commentary;
+				addMessage(embed.id, 'assistant', storedText);
 				if (extracted) updateEmbed(owner, embed.id, { html: extracted });
 				const fresh = getEmbedForOwner(owner, embed.id);
 				const done: ChatDonePayload = {

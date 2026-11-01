@@ -56,3 +56,83 @@ export function visibleAssistantText(text: string): string {
 	if (!cut) return text.trim();
 	return text.slice(0, cut.index).trim();
 }
+
+export const UNCHANGED_EMBED_NOTE = 'Ingen ny embed ble levert, så ingenting er endret.';
+
+const UNGROUNDED_FIX =
+	/fikset|deaktivert|\bdisabled\b|nå skal du|rettet|feilen var|problemet var|har endret|er oppdatert/i;
+
+export function groundedAssistantNote(
+	commentary: string,
+	previousHtml: string,
+	nextHtml: string | null
+): string {
+	const note = commentary.trim();
+	const changed = Boolean(nextHtml && nextHtml.trim() !== previousHtml.trim());
+	if (!note || changed || !UNGROUNDED_FIX.test(note)) return note;
+	return UNCHANGED_EMBED_NOTE;
+}
+
+export type WorkStep = {
+	id: string;
+	label: string;
+};
+
+export type WorkTrace = {
+	phase: 'thinking' | 'writing';
+	label: string;
+	note: string;
+	fileName: string;
+	status: 'venter' | 'skriver' | 'ferdig';
+	lineCount: number;
+	tail: string[];
+	steps: WorkStep[];
+};
+
+const FILE_NAME = 'embed.html';
+const TAIL_LINES = 40;
+
+function openDocumentSource(text: string): string {
+	const fences = parseFences(text);
+	const htmlFence = [...fences].reverse().find((fence) => HTML_FENCE_LANG.test(fence.lang));
+	if (htmlFence) return htmlFence.body.replace(/^\r?\n/, '');
+	const plainFence = [...fences]
+		.reverse()
+		.find((fence) => fence.lang === '' && DOCUMENT_START.test(fence.body));
+	if (plainFence) return plainFence.body.replace(/^\r?\n/, '');
+	const cut = DOCUMENT_START.exec(text);
+	if (!cut) return '';
+	return text.slice(cut.index);
+}
+
+export function workTrace(text: string): WorkTrace {
+	const note = visibleAssistantText(text);
+	const source = openDocumentSource(text);
+	const opened = source.length > 0 || /```html\b/i.test(text);
+	const ready = opened && extractHtml(text) !== null;
+	const steps: WorkStep[] = [
+		{ id: 'read', label: text.trim() ? 'Leste beskjeden' : 'Leser beskjeden' }
+	];
+	if (note) steps.push({ id: 'note', label: 'Skriver et notat' });
+	if (opened) steps.push({ id: 'open', label: 'Åpnet embed.html' });
+	if (/<style\b/i.test(source)) steps.push({ id: 'style', label: 'Skriver stil' });
+	if (/<body\b/i.test(source)) steps.push({ id: 'body', label: 'Skriver innhold' });
+	if (/<script\b/i.test(source)) steps.push({ id: 'script', label: 'Skriver script' });
+	if (ready) steps.push({ id: 'close', label: 'Lukket embed.html' });
+
+	const raw = source.replace(/\s+$/, '');
+	const lines = raw.length === 0 ? [] : raw.split(/\r?\n/);
+	const tail = lines.slice(-TAIL_LINES);
+	const current = steps.at(-1)?.label ?? 'Tenker';
+
+	return {
+		phase: text.trim() ? 'writing' : 'thinking',
+		label: current,
+		note,
+		fileName: FILE_NAME,
+		status: ready ? 'ferdig' : opened ? 'skriver' : 'venter',
+		lineCount: lines.length,
+		tail,
+		steps
+	};
+}
