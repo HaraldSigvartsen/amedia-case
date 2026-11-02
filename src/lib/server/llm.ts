@@ -7,6 +7,30 @@ import type { Role } from '#lib/types.ts';
 const MISSING_KEY = 'Mangler LLM_API_KEY. Legg nøkkelen i .env og start på nytt.';
 const FAILED_CALL = 'Kall til språkmodellen feilet';
 
+// claude-sonnet-5 returns 400 when temperature is set. Leave sampling at the model default.
+export function anthropicRequestBody(model: string, system: string, messages: unknown) {
+	return {
+		model,
+		max_tokens: 8192,
+		stream: true as const,
+		system,
+		messages
+	};
+}
+
+export function failedModelCall(status: number, body: string): string {
+	let detail = '';
+	try {
+		const parsed = JSON.parse(body) as { error?: { message?: unknown }; message?: unknown };
+		const message = parsed.error?.message ?? parsed.message;
+		if (typeof message === 'string') detail = message;
+	} catch {
+		detail = '';
+	}
+	const short = [...detail.replace(/\s+/g, ' ').trim()].slice(0, 160).join('');
+	return short ? `${FAILED_CALL} (${status}): ${short}` : `${FAILED_CALL} (${status}).`;
+}
+
 type ChatTurn = {
 	role: Role;
 	content: string;
@@ -81,7 +105,8 @@ async function postJson(
 		throw new Error(`${FAILED_CALL}.`);
 	});
 	if (!response.ok) {
-		throw new Error(`${FAILED_CALL} (${response.status}).`);
+		const body = await response.text().catch(() => '');
+		throw new Error(failedModelCall(response.status, body));
 	}
 	return response;
 }
@@ -210,17 +235,14 @@ async function streamAnthropic(
 			'anthropic-version': '2023-06-01',
 			'content-type': 'application/json'
 		},
-		{
+		anthropicRequestBody(
 			model,
-			max_tokens: 8192,
-			temperature: 0.4,
-			stream: true,
-			system: systemPrompt(options.currentHtml),
-			messages: anthropicMessages(
+			systemPrompt(options.currentHtml),
+			anthropicMessages(
 				history,
 				anthropicUserContent(options.userMessage, options.attachments ?? [])
 			)
-		},
+		),
 		options.signal
 	);
 	let full = '';
